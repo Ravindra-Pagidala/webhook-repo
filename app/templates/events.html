@@ -85,33 +85,36 @@
 <body>
 <div class="header">
     <h1>🚀 GitHub Activity Monitor</h1>
-    <div class="status">Auto-refreshing every 15 seconds ⏰</div>
+    <div class="status">Auto-refreshing every 15 seconds ⏰ | Found {{ events|length }} events</div>
 </div>
 
 <div class="events-container">
     <div class="events">
-        {% if events %}
+        {% if events and events|length > 0 %}
         {% for event in events %}
         <div class="event {{ event.eventtype }}">
             <div class="event-content">
-                <div class="author">{{ event.author }}</div>
+                <div class="author">{{ event.author or 'Unknown' }}</div>
                 <div class="details">
                     {% if event.eventtype == 'push' %}
-                    pushed to <strong>{{ event.tobranch }}</strong>
+                    pushed to <strong>{{ event.tobranch or 'main' }}</strong>
                     {% elif event.eventtype == 'pull_request' %}
-                    submitted PR <strong>{{ event.frombranch }}</strong> → <strong>{{ event.tobranch }}</strong>
+                    submitted PR <strong>{{ event.frombranch or 'unknown' }}</strong> → <strong>{{ event.tobranch or 'main' }}</strong>
                     {% elif event.eventtype == 'merge' %}
-                    merged <strong>{{ event.frombranch }}</strong> → <strong>{{ event.tobranch }}</strong>
+                    merged <strong>{{ event.frombranch or 'unknown' }}</strong> → <strong>{{ event.tobranch or 'main' }}</strong>
+                    {% else %}
+                    unknown event: {{ event.eventtype }}
                     {% endif %}
                 </div>
-                <div class="time">on {{ event.timestamp_display or event.timestamp }}</div>
+                <div class="time">on {{ event.timestamp_display or event.timestamp or 'now' }}</div>
             </div>
         </div>
         {% endfor %}
         {% else %}
         <div class="empty">
             🎯 Waiting for GitHub events...<br>
-            <small>Push/PR/Merge on action-repo to see live updates!</small>
+            <small>✅ Repository: <code>list(cursor)</code> fixed ✓<br>
+                Push/PR/Merge on action-repo to see live updates!</small>
         </div>
         {% endif %}
     </div>

@@ -10,15 +10,19 @@ def save_event(event_data):
 def get_recent_events(limit=10):
     """Fetch recent events (Repository layer)"""
     db = get_db()
-    events = list(
-        db.find()
-        .sort("timestamp", -1)
-        .limit(limit)
-    )
+
+    #  FIX: Convert Cursor → List
+    cursor = db.find().sort("timestamp", -1).limit(limit)
+    events = list(cursor)  #  REQUIRED! Cursor ≠ List
+
+    print(f" Found {len(events)} events in DB")  # Debug
 
     # Format for UI
     for event in events:
         if event.get('timestamp'):
-            event['timestamp_display'] = event['timestamp'][:19].replace('T', ' ')
+            # Fix timestamp format for display
+            event['timestamp_display'] = event['timestamp'].replace('T', ' ').split('.')[0]
 
     return events
+
+
