@@ -5,21 +5,81 @@
     <meta http-equiv="refresh" content="15">
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:0 auto;padding:30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
-        .header{text-align:center;color:white;margin-bottom:40px;}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+            max-width:900px;margin:0 auto;padding:30px;
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            min-height:100vh;
+        }
+        .header{
+            text-align:center;color:white;margin-bottom:40px;
+        }
         .header h1{font-size:2.5em;margin-bottom:10px;}
-        .status{background:rgba(255,255,255,0.2);padding:15px 25px;border-radius:50px;display:inline-block;}
-        .events{display:flex;flex-direction:column;gap:15px;}
-        .event{background:white;padding:20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.1);}
-        .event::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#0366d6,#28a745);}
-        .event.push{border-left:5px solid #28a745;}
-        .event.pull_request{border-left:5px solid #0366d6;}
-        .event.merge{border-left:5px solid #6f42c1;}
-        .author{font-weight:700;font-size:1.1em;color:#24292e;}
-        .details{color:#586069;margin:8px 0;font-size:1.05em;}
-        .time{font-size:0.9em;color:#6a737d;font-style:italic;}
-        .empty{text-align:center;color:white;font-size:1.2em;margin-top:50px;}
-        .refresh{position:fixed;bottom:20px;right:20px;background:#0366d6;color:white;border:none;padding:12px 20px;border-radius:25px;cursor:pointer;box-shadow:0 4px 15px rgba(3,102,214,0.4);}
+        .status{
+            background:rgba(255,255,255,0.2);
+            padding:15px 25px;border-radius:50px;display:inline-block;
+            backdrop-filter:blur(10px);
+        }
+        .events-container{
+            background:rgba(255,255,255,0.1);
+            backdrop-filter:blur(20px);
+            border-radius:20px;
+            padding:30px;
+            max-height:70vh;
+            overflow-y:auto;
+            border:1px solid rgba(255,255,255,0.2);
+        }
+        .events{
+            display:flex;flex-direction:column;gap:20px;
+        }
+        .event{
+            background:white;padding:25px;border-radius:16px;
+            box-shadow:0 10px 40px rgba(0,0,0,0.15);
+            position:relative;overflow:hidden;
+            transform:translateY(0);
+            transition:all 0.3s ease;
+        }
+        .event:hover{transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,0.2);}
+        .event::before{
+            content:'';position:absolute;top:0;left:0;right:0;height:5px;
+        }
+        .event.push::before{background:linear-gradient(90deg,#28a745,#51cf66);}
+        .event.pull_request::before{background:linear-gradient(90deg,#0366d6,#44a9ff);}
+        .event.merge::before{background:linear-gradient(90deg,#6f42c1,#a855f7);}
+        .event-content{padding-top:20px;}
+        .author{
+            font-weight:800;font-size:1.3em;color:#24292e;
+            margin-bottom:8px;
+        }
+        .details{
+            color:#24292e;font-size:1.1em;font-weight:500;
+            margin-bottom:12px;line-height:1.4;
+        }
+        .time{
+            font-size:0.95em;color:#6a737d;font-weight:500;
+            background:rgba(255,255,255,0.5);padding:6px 12px;
+            border-radius:20px;display:inline-block;
+            font-family:monospace;
+        }
+        .empty{
+            text-align:center;color:rgba(255,255,255,0.8);
+            font-size:1.4em;margin-top:80px;padding:40px;
+            background:rgba(255,255,255,0.1);border-radius:16px;
+            border:2px dashed rgba(255,255,255,0.3);
+        }
+        .refresh{
+            position:fixed;bottom:30px;right:30px;
+            background:linear-gradient(135deg,#0366d6,#44a9ff);
+            color:white;border:none;padding:15px 25px;
+            border-radius:50px;cursor:pointer;box-shadow:0 8px 25px rgba(3,102,214,0.4);
+            font-weight:600;font-size:1em;transition:all 0.3s ease;
+        }
+        .refresh:hover{transform:scale(1.05);box-shadow:0 12px 35px rgba(3,102,214,0.5);}
+        @media(max-width:768px){
+            body{padding:20px;}
+            .events-container{padding:20px;margin:10px;}
+            .header h1{font-size:2em;}
+        }
     </style>
 </head>
 <body>
@@ -28,28 +88,35 @@
     <div class="status">Auto-refreshing every 15 seconds ⏰</div>
 </div>
 
-<div class="events">
-    {% if events %}
-    {% for event in events %}
-    <div class="event {{ event.eventtype }}">
-        <div class="author">{{ event.author }}</div>
-        <div class="details">
-            {% if event.eventtype == 'push' %}
-            pushed to <strong>{{ event.tobranch }}</strong>
-            {% elif event.eventtype == 'pull_request' %}
-            submitted PR <strong>{{ event.frombranch }}</strong> → <strong>{{ event.tobranch }}</strong>
-            {% elif event.eventtype == 'merge' %}
-            merged <strong>{{ event.frombranch }}</strong> → <strong>{{ event.tobranch }}</strong>
-            {% endif %}
+<div class="events-container">
+    <div class="events">
+        {% if events %}
+        {% for event in events %}
+        <div class="event {{ event.eventtype }}">
+            <div class="event-content">
+                <div class="author">{{ event.author }}</div>
+                <div class="details">
+                    {% if event.eventtype == 'push' %}
+                    pushed to <strong>{{ event.tobranch }}</strong>
+                    {% elif event.eventtype == 'pull_request' %}
+                    submitted PR <strong>{{ event.frombranch }}</strong> → <strong>{{ event.tobranch }}</strong>
+                    {% elif event.eventtype == 'merge' %}
+                    merged <strong>{{ event.frombranch }}</strong> → <strong>{{ event.tobranch }}</strong>
+                    {% endif %}
+                </div>
+                <div class="time">on {{ event.timestamp_display or event.timestamp }}</div>
+            </div>
         </div>
-        <div class="time">on {{ event.timestamp_display or event.timestamp }}</div>
+        {% endfor %}
+        {% else %}
+        <div class="empty">
+            🎯 Waiting for GitHub events...<br>
+            <small>Push/PR/Merge on action-repo to see live updates!</small>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
-    {% else %}
-    <div class="empty">Waiting for GitHub events... 🌟</div>
-    {% endif %}
 </div>
 
-<button class="refresh" onclick="location.reload()">↻ Refresh</button>
+<button class="refresh" onclick="location.reload()">↻ Refresh Now</button>
 </body>
 </html>
