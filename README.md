@@ -2,8 +2,6 @@
 
 > **Real-time GitHub webhook receiver** that captures **Push**, **Pull Request**, and **Merge** events, stores them in **MongoDB**, and displays them in a **beautiful live-updating UI** (15s auto-refresh).
 
-[
-
 ## ✨ Features
 
 - ✅ **Push events**: `{author} pushed to {branch}`
